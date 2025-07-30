@@ -1,0 +1,31 @@
+# Django Framework
+Django==5.2
+
+# Machine Learning & AI
+tensorflow==2.19.0
+keras==3.11.0
+numpy==2.1.3
+
+# Image Processing
+Pillow==10.4.0
+
+# Web Development
+gunicorn==23.0.0
+
+# Database (for production)
+psycopg2-binary==2.9.9
+
+# Environment Management
+python-decouple==3.8
+
+# Development Tools
+django-debug-toolbar==4.4.6
+
+# Security
+django-cors-headers==4.4.0
+
+# Static Files (for production)
+whitenoise==6.8.2
+
+# Additional utilities
+requests==2.32.4

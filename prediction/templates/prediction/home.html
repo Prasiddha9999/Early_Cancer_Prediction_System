@@ -1,0 +1,269 @@
+{% extends 'prediction/base.html' %}
+
+{% block title %}Home - Lung Cancer Detection System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Upload Section -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-upload me-2"></i>
+                    Upload CT Scan Image
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'prediction:predict' %}" enctype="multipart/form-data" id="uploadForm">
+                    {% csrf_token %}
+
+                    <!-- User Name Field -->
+                    <div class="mb-4">
+                        <label for="{{ upload_form.user_name.id_for_label }}" class="form-label">
+                            <i class="fas fa-user me-2"></i>{{ upload_form.user_name.label }}
+                        </label>
+                        {{ upload_form.user_name }}
+                        {% if upload_form.user_name.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in upload_form.user_name.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="upload-area" id="uploadArea">
+                        <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                        <h5>Drag & Drop your CT scan image here</h5>
+                        <p class="text-muted">or click to browse files</p>
+                        <input type="file" id="id_uploaded_image" name="uploaded_image" accept="image/*" class="form-control" style="display: none;">
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                Supported formats: JPG, PNG, BMP, TIFF (Max size: 10MB)
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div id="imagePreview" class="mt-3" style="display: none;">
+                        <h6>Selected Image:</h6>
+                        <img id="previewImg" src="" alt="Preview" class="img-thumbnail" style="max-height: 200px;">
+                        <p id="fileName" class="mt-2 text-muted"></p>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg" id="analyzeBtn" disabled>
+                            <i class="fas fa-brain me-2"></i>
+                            Analyze Image
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-lg ms-2" id="clearBtn" style="display: none;">
+                            <i class="fas fa-times me-2"></i>
+                            Clear
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Search and System Info -->
+    <div class="col-lg-4">
+        <!-- Report Search Section -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-search me-2"></i>
+                    Find Your Report
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'prediction:search_report' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ search_form.report_id.id_for_label }}" class="form-label">
+                            {{ search_form.report_id.label }}
+                        </label>
+                        {{ search_form.report_id }}
+                        {% if search_form.report_id.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in search_form.report_id.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="fas fa-search me-2"></i>
+                        Search Report
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm model-comparison">
+            <div class="card-body">
+                <h5 class="card-title">
+                    Available Models
+                </h5>
+                <div class="mb-3">
+                    <h2 class="display-4">{{ total_models }}</h2>
+                    <p class="mb-0">-------------------------</p>
+                </div>
+                
+                <div class="model-list">
+                    {% for model in available_models %}
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <span>{{ model }}</span>
+                        </div>
+                    {% empty %}
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                            <span>No models loaded</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    How it works
+                </h6>
+            </div>
+            <div class="card-body">
+                <ol class="list-unstyled">
+                    <li class="mb-2">
+                        <span class="badge bg-primary rounded-pill me-2">1</span>
+                        Upload your CT scan image
+                    </li>
+                    <li class="mb-2">
+                        <span class="badge bg-primary rounded-pill me-2">2</span>
+                        AI models analyze the image
+                    </li>
+                    <li class="mb-2">
+                        <span class="badge bg-primary rounded-pill me-2">3</span>
+                        Get instant classification results
+                    </li>
+                    <li>
+                        <span class="badge bg-primary rounded-pill me-2">4</span>
+                        View detailed analysis report
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Predictions -->
+{% if recent_predictions %}
+<div class="row mt-5">
+    <div class="col-12">
+        <h4 class="mb-3">
+            <i class="fas fa-history me-2"></i>
+            Recent Predictions
+        </h4>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Prediction</th>
+                        <th>Confidence</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prediction in recent_predictions %}
+                    <tr>
+                        <td>{{ prediction.original_filename }}</td>
+                        <td>
+                            <span class="badge bg-{% if prediction.predicted_class == 'Normal' %}success{% elif prediction.predicted_class == 'Bengin' %}warning{% else %}danger{% endif %}">
+                                {{ prediction.predicted_class }}
+                            </span>
+                        </td>
+                        <td>{{ prediction.confidence|floatformat:2 }}%</td>
+                        <td>{{ prediction.get_formatted_timestamp }}</td>
+                        <td>
+                            <a href="{% url 'prediction:results' prediction.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye me-1"></i>View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('id_uploaded_image');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    const fileName = document.getElementById('fileName');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    
+    // File input change handler
+    fileInput.addEventListener('change', function(e) {
+        handleFileSelect(e.target.files[0]);
+    });
+    
+    // Click to upload
+    uploadArea.addEventListener('click', function() {
+        fileInput.click();
+    });
+
+    // Drag and drop handlers
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            handleFileSelect(files[0]);
+        }
+    });
+    
+    // Clear button handler
+    clearBtn.addEventListener('click', function() {
+        fileInput.value = '';
+        imagePreview.style.display = 'none';
+        analyzeBtn.disabled = true;
+        clearBtn.style.display = 'none';
+    });
+    
+    function handleFileSelect(file) {
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                fileName.textContent = file.name;
+                imagePreview.style.display = 'block';
+                analyzeBtn.disabled = false;
+                clearBtn.style.display = 'inline-block';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+});
+</script>
+{% endblock %}
