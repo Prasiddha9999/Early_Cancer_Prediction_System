@@ -200,7 +200,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-For support, email prasiddha@example.com or create an issue in the GitHub repository.
+For support, message in regmicode.com or create an issue in the GitHub repository.
 
 ---
 
